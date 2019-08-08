@@ -24,7 +24,8 @@ public class NoteController {
 	// Create a new Note
 	@PostMapping("/create")
 	public Response createNote(@RequestBody NoteDto noteDto, @RequestHeader String token) {
-//		System.out.println(noteDto);
+		
+		System.out.println(noteDto);
 
 		return iservice.create(noteDto, token);
 

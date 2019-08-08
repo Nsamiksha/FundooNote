@@ -1,7 +1,5 @@
 package com.bridgeit.fundoo.notes.service;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import org.modelmapper.ModelMapper;
@@ -10,11 +8,12 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import com.bridgeit.fundoo.notes.dto.NoteDto;
+import com.bridgeit.fundoo.notes.exception.RecordNotFoundException;
 import com.bridgeit.fundoo.notes.exception.Response;
-import com.bridgeit.fundoo.notes.exception.ResponseHelper;
 import com.bridgeit.fundoo.notes.exception.UserException;
 import com.bridgeit.fundoo.notes.model.Note;
 import com.bridgeit.fundoo.notes.repository.NoteRepository;
+import com.bridgeit.fundoo.notes.utility.Function;
 import com.bridgeit.fundoo.notes.utility.TokenGenerator;
 
 @PropertySource("classpath:message.properties")
@@ -28,34 +27,41 @@ public class NoteServiceImpl implements INoteService {
 	private TokenGenerator tokenGenerator;
 
 	@Autowired
+	private Function function;
+
+	@Autowired
 	private Environment environment;
 
 	@Autowired
-	private Response statusResponse;
+	private ModelMapper modelMapper;
 
 	@Override
 	public Response create(NoteDto noteDto, String token) {
 
-		if (noteDto.getDescription() == "" && noteDto.getTitle() == "") {
-			
+		Note note;
+
+		if (noteDto.getTitle() == null || noteDto.getDescription() == null) {
+
 			throw new UserException(environment.getProperty("status.note.emptyfield"));
+
 		}
 
-		long id = tokenGenerator.decryptToken(token);
+		if (noteDto.getTitle() != "" || noteDto.getDescription() != "") {
 
-		ModelMapper modelMapper = new ModelMapper();
-		Note note = modelMapper.map(noteDto, Note.class);
+			long id = tokenGenerator.decryptToken(token);
 
-		LocalDateTime myDateObj = LocalDateTime.now();
-		DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-		String formattedDate = myDateObj.format(myFormatObj);
+			note = modelMapper.map(noteDto, Note.class);
 
-		note.setCreateDate(formattedDate);
-		note.setId(id);
-		noteRepository.save(note);
-		statusResponse = ResponseHelper.statusResponse(200, environment.getProperty("status.notes.createdSuccessfull"),
-				note);
-		return statusResponse;
+			note.setCreateDate(function.date());
+			note.setId(id);
+			note = noteRepository.save(note);
+			return function.responseGenerator(200, environment.getProperty("status.notes.createdSuccessfull"), note);
+
+		} else {
+
+			throw new UserException(environment.getProperty("status.note.trashError"));
+		}
+
 	}
 
 	@Override
@@ -64,24 +70,33 @@ public class NoteServiceImpl implements INoteService {
 		long id = tokenGenerator.decryptToken(token);
 
 		Optional<Note> note = noteRepository.findById(noteId);
+
 		if (note.get().getId() == id) {
+			
+			if (note.get().getNoteid() != noteId) {
+
+				throw new RecordNotFoundException("Record Not Found");
+			}
+
 			if (note.get().isTrash()) {
+
 				note.get().setTrash(false);
+
 				noteRepository.save(note.get());
-				statusResponse = ResponseHelper.statusResponse(200, environment.getProperty("status.note.untrashed"),
+
+				return function.responseGenerator(200, environment.getProperty("status.note.untrashed"),
 						note.get().isTrash());
-				return statusResponse;
 
 			} else {
 				note.get().setTrash(true);
 				noteRepository.save(note.get());
-				statusResponse = ResponseHelper.statusResponse(200, environment.getProperty("status.note.trashed"),
+
+				return function.responseGenerator(200, environment.getProperty("status.note.trashed"),
 						note.get().isTrash());
-				return statusResponse;
 
 			}
 		} else {
-			throw new UserException(environment.getProperty("status.note.trashError"));
+			throw new RecordNotFoundException(environment.getProperty("status.note.trashError"));
 		}
 
 	}
@@ -92,21 +107,27 @@ public class NoteServiceImpl implements INoteService {
 		long id = tokenGenerator.decryptToken(token);
 
 		Optional<Note> note = noteRepository.findById(noteId);
+
+		
 		if (note.get().getId() == id) {
+			
+			if (note.get().getNoteid() != noteId) {
+
+				throw new RecordNotFoundException("Record Not Found");
+
+			}
 			if (note.get().isArchive()) {
 				note.get().setArchive(false);
 				noteRepository.save(note.get());
-				statusResponse = ResponseHelper.statusResponse(200, environment.getProperty("status.note.unarchive"),
-						note.get().isArchive());
-				return statusResponse;
 
+				return function.responseGenerator(200, environment.getProperty("status.note.unarchive"),
+						note.get().isArchive());
 			} else {
 				note.get().setArchive(true);
 				noteRepository.save(note.get());
-				statusResponse = ResponseHelper.statusResponse(200, environment.getProperty("status.note.archive"),
-						note.get().isArchive());
-				return statusResponse;
 
+				return function.responseGenerator(200, environment.getProperty("status.note.archive"),
+						note.get().isArchive());
 			}
 		} else {
 			throw new UserException(environment.getProperty("status.note.archievederror"));
@@ -121,22 +142,28 @@ public class NoteServiceImpl implements INoteService {
 
 		Optional<Note> note = noteRepository.findById(noteId);
 		if (note.get().getId() == id) {
+			
+			if (note.get().getNoteid() != noteId) {
+
+				throw new RecordNotFoundException("Record Not Found");
+
+			}
+
 			if (note.get().isPin()) {
+
 				note.get().setPin(false);
+
 				noteRepository.save(note.get());
-				statusResponse = ResponseHelper.statusResponse(200, environment.getProperty("status.note.unpined"),
+
+				return function.responseGenerator(200, environment.getProperty("status.note.unpined"),
 						note.get().isPin());
-
-				return statusResponse;
-
 			} else {
 				note.get().setPin(true);
+
 				noteRepository.save(note.get());
-				statusResponse = ResponseHelper.statusResponse(200, environment.getProperty("status.note.pined"),
+
+				return function.responseGenerator(200, environment.getProperty("status.note.pined"),
 						note.get().isPin());
-
-				return statusResponse;
-
 			}
 		} else {
 			throw new UserException(environment.getProperty("status.note.pinerror"));
@@ -152,18 +179,20 @@ public class NoteServiceImpl implements INoteService {
 		Optional<Note> note = noteRepository.findById(noteId);
 
 		if (note.get().getId() == id) {
+			
+			if (note.get().getNoteid() != noteId) {
+
+				throw new RecordNotFoundException("Record Not Found");
+
+			}
 			if (note.get().isTrash()) {
 				noteRepository.deleteById(noteId);
-				statusResponse = ResponseHelper.statusResponse(200, environment.getProperty("status.note.deleted"),
-						note.get().isPin());
 
-				return statusResponse;
+				return function.responseGenerator(200, environment.getProperty("status.note.deleted"), noteId);
 
 			} else {
-				statusResponse = ResponseHelper.statusResponse(500, environment.getProperty("status.note.noteDeleted "),
-						note.get().isPin());
 
-				return statusResponse;
+				return function.responseGenerator(200, environment.getProperty("status.note.noteDeleted "), noteId);
 			}
 		} else {
 			throw new UserException(environment.getProperty("status.note.noteDeleted"));
@@ -176,11 +205,18 @@ public class NoteServiceImpl implements INoteService {
 
 		long userId = tokenGenerator.decryptToken(token);
 
-		List<Note> note = noteRepository.findAllById(userId);
+		Optional<Note> note = noteRepository.findById(userId);
 
-		statusResponse = ResponseHelper.statusResponse(500, "ALL NOTES", note);
+		if (note.isEmpty()) {
 
-		return statusResponse;
+			throw new RecordNotFoundException("user not found");
+
+		}
+
+		List<Note> list = noteRepository.findAllById(userId);
+
+		return function.responseGenerator(200, "ALL NOTES", list);
+
 	}
 
 }
