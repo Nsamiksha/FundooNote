@@ -1,5 +1,6 @@
- package com.bridgeit.fundoo.notes.controller;
+package com.bridgeit.fundoo.notes.controller;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,10 +14,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.bridgeit.fundoo.notes.dto.NoteDto;
 import com.bridgeit.fundoo.notes.exception.Response;
 import com.bridgeit.fundoo.notes.service.INoteService;
+import org.slf4j.Logger;
 
 @RestController
 @RequestMapping("/notes")
 public class NoteController {
+
+	public static final Logger logger = LoggerFactory.getLogger(NoteController.class);
 
 	@Autowired
 	private INoteService iservice;
@@ -24,9 +28,9 @@ public class NoteController {
 	// Create a new Note
 	@PostMapping("/create")
 	public Response createNote(@RequestBody NoteDto noteDto, @RequestHeader String token) {
-		
-		System.out.println(noteDto);
 
+		System.out.println(noteDto);
+		logger.info("note created");
 		return iservice.create(noteDto, token);
 
 	}
@@ -67,11 +71,9 @@ public class NoteController {
 
 	}
 
-
 	// getall
 	@GetMapping("/getall")
 	public Response getAll(@RequestHeader String token) {
-		
 
 		return iservice.getAll(token);
 //		bkesghfc3uiwcgfo

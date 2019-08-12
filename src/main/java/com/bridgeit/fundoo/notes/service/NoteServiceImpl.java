@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import com.bridgeit.fundoo.notes.dto.NoteDto;
 import com.bridgeit.fundoo.notes.exception.RecordNotFoundException;
 import com.bridgeit.fundoo.notes.exception.Response;
-import com.bridgeit.fundoo.notes.exception.UserException;
+import com.bridgeit.fundoo.notes.exception.NoteException;
 import com.bridgeit.fundoo.notes.model.Note;
 import com.bridgeit.fundoo.notes.repository.NoteRepository;
 import com.bridgeit.fundoo.notes.utility.Function;
@@ -42,7 +42,7 @@ public class NoteServiceImpl implements INoteService {
 
 		if (noteDto.getTitle() == null || noteDto.getDescription() == null) {
 
-			throw new UserException(environment.getProperty("status.note.emptyfield"));
+			throw new NoteException(environment.getProperty("status.note.emptyfield"));
 
 		}
 
@@ -57,9 +57,9 @@ public class NoteServiceImpl implements INoteService {
 			note = noteRepository.save(note);
 			return function.responseGenerator(200, environment.getProperty("status.notes.createdSuccessfull"), note);
 
-		} else {
+		}  else {
 
-			throw new UserException(environment.getProperty("status.note.trashError"));
+			throw new NoteException(environment.getProperty("status.note.trashError"));
 		}
 
 	}
@@ -72,10 +72,10 @@ public class NoteServiceImpl implements INoteService {
 		Optional<Note> note = noteRepository.findById(noteId);
 
 		if (note.get().getId() == id) {
-			
+
 			if (note.get().getNoteid() != noteId) {
 
-				throw new RecordNotFoundException("Record Not Found");
+				throw new RecordNotFoundException(environment.getProperty("status.note.recordnotfound"));
 			}
 
 			if (note.get().isTrash()) {
@@ -96,7 +96,7 @@ public class NoteServiceImpl implements INoteService {
 
 			}
 		} else {
-			throw new RecordNotFoundException(environment.getProperty("status.note.trashError"));
+			throw new RecordNotFoundException(environment.getProperty("status.note.recordnotfound"));
 		}
 
 	}
@@ -108,9 +108,8 @@ public class NoteServiceImpl implements INoteService {
 
 		Optional<Note> note = noteRepository.findById(noteId);
 
-		
 		if (note.get().getId() == id) {
-			
+
 			if (note.get().getNoteid() != noteId) {
 
 				throw new RecordNotFoundException("Record Not Found");
@@ -130,7 +129,7 @@ public class NoteServiceImpl implements INoteService {
 						note.get().isArchive());
 			}
 		} else {
-			throw new UserException(environment.getProperty("status.note.archievederror"));
+			throw new NoteException(environment.getProperty("status.note.archievederror"));
 		}
 
 	}
@@ -142,7 +141,7 @@ public class NoteServiceImpl implements INoteService {
 
 		Optional<Note> note = noteRepository.findById(noteId);
 		if (note.get().getId() == id) {
-			
+
 			if (note.get().getNoteid() != noteId) {
 
 				throw new RecordNotFoundException("Record Not Found");
@@ -166,7 +165,7 @@ public class NoteServiceImpl implements INoteService {
 						note.get().isPin());
 			}
 		} else {
-			throw new UserException(environment.getProperty("status.note.pinerror"));
+			throw new NoteException(environment.getProperty("status.note.pinerror"));
 		}
 
 	}
@@ -179,10 +178,10 @@ public class NoteServiceImpl implements INoteService {
 		Optional<Note> note = noteRepository.findById(noteId);
 
 		if (note.get().getId() == id) {
-			
+
 			if (note.get().getNoteid() != noteId) {
 
-				throw new RecordNotFoundException("Record Not Found");
+				throw new RecordNotFoundException(environment.getProperty("status.note.recordnotfound"));
 
 			}
 			if (note.get().isTrash()) {
@@ -195,7 +194,7 @@ public class NoteServiceImpl implements INoteService {
 				return function.responseGenerator(200, environment.getProperty("status.note.noteDeleted "), noteId);
 			}
 		} else {
-			throw new UserException(environment.getProperty("status.note.noteDeleted"));
+			throw new NoteException(environment.getProperty("status.note.noteDeleted"));
 		}
 
 	}
@@ -204,12 +203,13 @@ public class NoteServiceImpl implements INoteService {
 	public Response getAll(String token) {
 
 		long userId = tokenGenerator.decryptToken(token);
+		System.out.println(userId);
 
-		Optional<Note> note = noteRepository.findById(userId);
+		List<Note> note = noteRepository.findAllById(userId);
 
 		if (note.isEmpty()) {
 
-			throw new RecordNotFoundException("user not found");
+			throw new RecordNotFoundException(environment.getProperty("status.note.recordnotfound"));
 
 		}
 

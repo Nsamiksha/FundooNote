@@ -2,13 +2,24 @@
 package com.bridgeit.fundoo.notes.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Table(name = "fundoo_notes_data")
 @Entity
@@ -44,6 +55,11 @@ public class Note implements Serializable {
 
 	@Column(name = "PINUNPIN")
 	private boolean pin;
+
+	@JsonIgnore
+	@ManyToMany(cascade = CascadeType.ALL)
+	@JoinTable(name = "Notes_Labels")
+	private List<Label> label = new ArrayList<>();;
 
 	public String getTitle() {
 		return title;
@@ -101,8 +117,6 @@ public class Note implements Serializable {
 		this.archive = archive;
 	}
 
-	
-
 	public long getId() {
 		return id;
 	}
@@ -111,10 +125,19 @@ public class Note implements Serializable {
 		this.id = id;
 	}
 
+	public List<Label> getLabel() {
+		return label;
+	}
+
+	public void setLabel(List<Label> label) {
+		this.label = label;
+	}
+
 	@Override
 	public String toString() {
 		return "Note [noteid=" + noteid + ", id=" + id + ", title=" + title + ", description=" + description
-				+ ", createDate=" + createDate + ", trash=" + trash + ", archive=" + archive + ", pin=" + pin + "]";
+				+ ", createDate=" + createDate + ", trash=" + trash + ", archive=" + archive + ", pin=" + pin
+				+ ", label=" + label + "]";
 	}
 
 }
