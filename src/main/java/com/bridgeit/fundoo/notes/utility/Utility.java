@@ -3,6 +3,7 @@ package com.bridgeit.fundoo.notes.utility;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,7 @@ import com.bridgeit.fundoo.notes.model.Label;
 import com.bridgeit.fundoo.notes.repository.LabelRepository;
 
 @Component
-public class Function {
+public class Utility {
 
 	@Autowired
 	private Response statusResponse;
@@ -44,8 +45,10 @@ public class Function {
 
 		long userId = tokenGenerator.decryptToken(token);
 		List<Label> list = labelRepository.findAllByUserId(userId);
+		Stream<Label> labelName = list.stream().filter(line -> line.getLabelTitle().equals(labelDto.getLabelTitle()));
+		System.out.println(labelName.toString());
 		for (Label label : list) {
-			if(label.getLabelTitle().equals(labelDto.getLabelTitle())) {
+			if (label.getLabelTitle().equals(labelDto.getLabelTitle())) {
 				return true;
 
 			}

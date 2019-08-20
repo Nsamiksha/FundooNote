@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+
 import org.springframework.stereotype.Service;
 import com.bridgeit.fundoo.notes.dto.LabelDto;
 import com.bridgeit.fundoo.notes.exception.NoteException;
@@ -13,7 +14,7 @@ import com.bridgeit.fundoo.notes.model.Label;
 import com.bridgeit.fundoo.notes.model.Note;
 import com.bridgeit.fundoo.notes.repository.LabelRepository;
 import com.bridgeit.fundoo.notes.repository.NoteRepository;
-import com.bridgeit.fundoo.notes.utility.Function;
+import com.bridgeit.fundoo.notes.utility.Utility;
 import com.bridgeit.fundoo.notes.utility.TokenGenerator;
 
 @Service
@@ -29,7 +30,7 @@ public class LabelServiceImpl implements ILabelService {
 	private NoteRepository noteRepository;
 
 	@Autowired
-	private Function function;
+	private Utility utility;
 
 	@Autowired
 	private Environment environment;
@@ -40,7 +41,7 @@ public class LabelServiceImpl implements ILabelService {
 	@Override
 	public Response create(LabelDto labelDto, String token) {
 
-		if (function.validation(labelDto, token)) {
+		if (utility.validation(labelDto, token)) {
 
 			throw new NoteException(environment.getProperty("status.label.exception"));
 		}
@@ -49,50 +50,52 @@ public class LabelServiceImpl implements ILabelService {
 		label = modelMapper.map(labelDto, Label.class);
 		label.setUserId(userId);
 		labelRepository.save(label);
-		return function.responseGenerator(200, environment.getProperty("status.label.createdSuccessfull"), label);
+		Optional<Label> labels = labelRepository.findByLabelTitle(labelDto.getLabelTitle());
+
+		return utility.responseGenerator(200, environment.getProperty("status.label.createdSuccessfull"), labels);
 	}
 
 	@Override
 	public Response labelsToNote(LabelDto labelDto, String token, Long noteId) {
 
-		if (function.validation(labelDto, token)) {
+		if (utility.validation(labelDto, token)) {
 			Optional<Label> label = labelRepository.findByLabelTitle(labelDto.getLabelTitle());
-			System.out.println(label);
 			Optional<Note> note1 = noteRepository.findById(noteId);
-			System.out.println(note1);
 			note1.get().getLabel().add(label.get());
 			noteRepository.save(note1.get());
+			Optional<Note> note2 = noteRepository.findById(noteId);
+			return utility.responseGenerator(200, "existing label added", note2);
 		}
-		long userId = tokenGenerator.decryptToken(token);
-		Label label;
-		label = modelMapper.map(labelDto, Label.class);
-		label.setUserId(userId);
-		labelRepository.save(label);
-		Optional<Note> note = noteRepository.findById(noteId);
-		note.get().getLabel().add(label);
-		noteRepository.save(note.get());
 
-		Optional<Note> note1 = noteRepository.findById(noteId);
+		else {
+			long userId = tokenGenerator.decryptToken(token);
+			Label label;
+			label = modelMapper.map(labelDto, Label.class);
+			label.setUserId(userId);
+			labelRepository.save(label);
+			Optional<Note> note = noteRepository.findById(noteId);
+			note.get().getLabel().add(label);
+			noteRepository.save(note.get());
 
-		return function.responseGenerator(200, environment.getProperty("status.label.createdSuccessfull"),
-				note1.get().getLabel());
+			Optional<Note> note1 = noteRepository.findById(noteId);
+
+			return utility.responseGenerator(200, environment.getProperty("status.label.createdSuccessfull"),
+					note1.get().getLabel());
+		}
 	}
 
 	@Override
 	public Response deleteLabel(String token, Long labelId) {
 		long userId = tokenGenerator.decryptToken(token);
 
-		List<Label> list = labelRepository.findAllByUserId(userId);
-
-		for (Label label : list) {
-			if (label.getLabelId() == labelId) {
-				labelRepository.deleteById(labelId);
-			}
+		Optional<Label> label = labelRepository.findById(labelId);
+		if (label.isEmpty()) {
+			throw new NoteException("label not present");
 		}
 
-		List<Label> list1 = labelRepository.findAllByUserId(userId);
+		labelRepository.deleteById(labelId);
 
-		return function.responseGenerator(200, environment.getProperty("status.label.DeletedSuccessfull"), list1);
+		return utility.responseGenerator(200, environment.getProperty("status.label.DeletedSuccessfull"), label);
 
 	}
 
@@ -106,7 +109,7 @@ public class LabelServiceImpl implements ILabelService {
 				labelRepository.save(label);
 			}
 		}
-		return function.responseGenerator(200, environment.getProperty("status.label.UpdatedSuccessfull"), list);
+		return utility.responseGenerator(200, environment.getProperty("status.label.UpdatedSuccessfull"), list);
 	}
 
 	@Override
@@ -116,7 +119,7 @@ public class LabelServiceImpl implements ILabelService {
 
 		List<Label> list = labelRepository.findAllByUserId(userId);
 
-		return function.responseGenerator(200, environment.getProperty("status.label.DisplayedSuccessfull"), list);
+		return utility.responseGenerator(200, environment.getProperty("status.label.DisplayedSuccessfull"), list);
 	}
 
 }

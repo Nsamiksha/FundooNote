@@ -1,25 +1,19 @@
 package com.bridgeit.fundoo.notes.dto;
 
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+
+
+@Getter
+@Setter
+@ToString
 public class LabelDto {
 	
 	
-	
 	private String labelTitle;
-	
-	public String getLabelTitle() {
-		return labelTitle;
-	}
-	
-	public void setLabelTitle(String labelTitle) {
-		this.labelTitle = labelTitle;
-	}
-
-	@Override
-	public String toString() {
-		return "LabelDto [labelTitle=" + labelTitle + "]";
-	}
-
-
 	
 
 	

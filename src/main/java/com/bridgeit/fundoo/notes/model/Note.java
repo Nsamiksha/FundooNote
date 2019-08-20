@@ -2,10 +2,13 @@
 package com.bridgeit.fundoo.notes.model;
 
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -21,6 +24,15 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@ToString
 @Table(name = "fundoo_notes_data")
 @Entity
 public class Note implements Serializable {
@@ -56,88 +68,20 @@ public class Note implements Serializable {
 	@Column(name = "PINUNPIN")
 	private boolean pin;
 
+	@Column(name = "Color")
+	private String color;
+
+	@Column(name = "Remainder")
+	private LocalDateTime remainder;
+
 	@JsonIgnore
 	@ManyToMany(cascade = CascadeType.ALL)
 	@JoinTable(name = "Notes_Labels")
-	private List<Label> label = new ArrayList<>();;
+	private List<Label> label = new ArrayList<>();
 
-	public String getTitle() {
-		return title;
+	public Note() {
+
 	}
 
-	public String getDescription() {
-		return description;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public String getCreateDate() {
-		return createDate;
-	}
-
-	public void setCreateDate(String createDate) {
-		this.createDate = createDate;
-	}
-
-	public boolean isTrash() {
-		return trash;
-	}
-
-	public boolean isPin() {
-		return pin;
-	}
-
-	public void setTrash(boolean trash) {
-		this.trash = trash;
-	}
-
-	public void setPin(boolean pin) {
-		this.pin = pin;
-	}
-
-	public long getNoteid() {
-		return noteid;
-	}
-
-	public boolean isArchive() {
-		return archive;
-	}
-
-	public void setNoteid(long noteid) {
-		this.noteid = noteid;
-	}
-
-	public void setArchive(boolean archive) {
-		this.archive = archive;
-	}
-
-	public long getId() {
-		return id;
-	}
-
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	public List<Label> getLabel() {
-		return label;
-	}
-
-	public void setLabel(List<Label> label) {
-		this.label = label;
-	}
-
-	@Override
-	public String toString() {
-		return "Note [noteid=" + noteid + ", id=" + id + ", title=" + title + ", description=" + description
-				+ ", createDate=" + createDate + ", trash=" + trash + ", archive=" + archive + ", pin=" + pin
-				+ ", label=" + label + "]";
-	}
 
 }

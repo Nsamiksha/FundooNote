@@ -1,6 +1,7 @@
 package com.bridgeit.fundoo.notes.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,13 +14,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bridgeit.fundoo.notes.dto.LabelDto;
 import com.bridgeit.fundoo.notes.exception.Response;
+import com.bridgeit.fundoo.notes.model.Label;
 import com.bridgeit.fundoo.notes.service.ILabelService;
 
 /**
  * @author samiksha NOTE APIs
  */
 @RestController
-@RequestMapping("/label")
+@RequestMapping("/api/v1/labels")
 public class LabelController {
 
 	@Autowired
@@ -33,6 +35,7 @@ public class LabelController {
 	@PostMapping()
 	public Response create(@RequestBody LabelDto labelDto, @RequestHeader String token) {
 
+		System.out.println(labelDto);
 		return iLabelService.create(labelDto, token);
 
 	}
@@ -56,7 +59,7 @@ public class LabelController {
 	 * @param token
 	 * @return
 	 */
-	@DeleteMapping("/delete/{labelId}")
+	@DeleteMapping("{labelId}")
 	public Response deleteLabel(@PathVariable Long labelId, @RequestHeader String token) {
 
 		return iLabelService.deleteLabel(token, labelId);
